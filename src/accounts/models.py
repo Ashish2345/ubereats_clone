@@ -59,7 +59,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     email =  models.EmailField(max_length=30, unique=True, verbose_name="Email")
     contact_no = models.CharField(max_length=10, null=True, blank=True)
     dob = models.DateTimeField(null=True, blank=True)
-    gender = models.CharField(default='ONLINE' ,verbose_name='user_gender', max_length=10,
+    gender = models.CharField(default='M' ,verbose_name='user_gender', max_length=10,
         choices=gender)
     profile_picture = models.FileField(upload_to=profile_path, 
         validators=[FileExtensionValidator(allowed_extensions=settings.VALID_IMAGE_FORMAT)], null=True)
@@ -83,3 +83,12 @@ class User(AbstractBaseUser,PermissionsMixin):
     def has_module_perms(self, app_label):
         return True
 
+
+class UserToken(AuditField):
+    user_id = models.IntegerField()
+    token = models.CharField(max_length=100)
+    exipired_at = models.DateTimeField()
+
+    def __str__(self):
+        return self.user_id
+        

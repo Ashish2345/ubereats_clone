@@ -51,3 +51,12 @@ class UserLoginSerializer(serializers.Serializer):
         if authenticate(email=data["email"], password=data.get('password', None)) is None:
             raise serializers.ValidationError("Email or password is incorrect")
         return super().validate(data)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "first_name", "last_name", "email", "contact_no", "dob", 
+            "gender"
+        ]

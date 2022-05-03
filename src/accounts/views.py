@@ -1,25 +1,18 @@
-from django.shortcuts import render
-from django.views import View
+import datetime
+from distutils.log import error
 
 from rest_framework.views import APIView
 from rest_framework import status
+from yaml import serialize
 
-from accounts.authentication import create_access_token, create_refresh_token
-from accounts.models import User
+
+from accounts.authentication import (JWTAuthentication, create_access_token, create_refresh_token, 
+                                    decode_access_token, decode_refresh_token)
+from accounts.models import User, UserToken
 
 from.response import Response
-from .serializers import UserLoginSerializer, UserSignupSerializer
+from .serializers import (UserLoginSerializer,  UserSignupSerializer, UserSerializer)
 
-
-class HomeView(View):
-    def dispatch(self, request, *args, **kwargs):
-        self.template_name = "home.html"
-        self.args = {}
-        self.content = {}
-        return super(self.__class__, self).dispatch(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        return render(self.request, self.template_name, self.args)
 
 class RegisterAPIView(APIView):
     def dispatch(self, request, *args, **kwargs):
@@ -45,11 +38,59 @@ class LoginAPIView(APIView):
             self.payload['message'] = 'User is successfully logged in!!'
             login_user = User.objects.get(email=request.data['email'])
             access_token = create_access_token(login_user.id)
-            refresh_token = create_access_token(login_user.id)
-            response = Response(self.payload)
+            refresh_token = create_refresh_token(login_user.id)
+
+            UserToken.objects.create(
+                user_id=login_user.id,
+                token = refresh_token,
+                exipired_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
+            )
+
+            response = Response()
             response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
             response.data = {
-                "token":access_token
+                "access_token":access_token
             }
-            
             return response
+
+
+class UserAPIView(APIView):
+    authentication_classes = [JWTAuthentication]
+    def dispatch(self, request, *args, **kwargs):
+        self.payload = {}
+        return super(self.__class__, self).dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):  
+        self.payload['user_details'] = UserSerializer(request.user).data
+        return Response(self.payload, status=status.HTTP_200_OK)
+
+class RefreshAPIView(APIView):
+    def dispatch(self, request, *args, **kwargs):
+        self.payload = {}
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
+        id = decode_refresh_token(refresh_token)
+        qs = UserToken.objects.filter(user_id=id, token = refresh_token, exipired_at__gt=datetime.datetime.now(tz=datetime.timezone.utc)).exists()
+        if qs: 
+            access_token = create_access_token(id)
+            self.payload["refresh_token"] = access_token
+            return Response(self.payload, status=status.HTTP_200_OK)
+        return Response(self.payload, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutAPIView(APIView):
+
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+    
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        UserToken.objects.filter(token=refresh_token).delete()
+        response = Response()
+        response.delete_cookie(key='refresh_token')
+        response.data = {
+            'message': "Logged Out"
+        }
+        return response 
