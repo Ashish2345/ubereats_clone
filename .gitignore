@@ -10,7 +10,7 @@ media/
 staticcdn/
 .vscode/
 venv/
-credentials.yaml
+
 build/
 logs/
 .DS_Store/
