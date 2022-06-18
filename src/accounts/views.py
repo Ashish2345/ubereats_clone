@@ -27,6 +27,7 @@ class RegisterAPIView(APIView):
             return Response(self.payload, status=status.HTTP_200_OK)
         return Response(self.payload, errors=serailizers.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class LoginAPIView(APIView):
     def dispatch(self, request, *args, **kwargs):
         self.payload = {}
@@ -40,12 +41,6 @@ class LoginAPIView(APIView):
             access_token = create_access_token(login_user.id)
             refresh_token = create_refresh_token(login_user.id)
 
-            UserToken.objects.create(
-                user_id=login_user.id,
-                token = refresh_token,
-                exipired_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=30)
-            )
-
             response = Response()
             response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
             response.data = {
@@ -54,7 +49,7 @@ class LoginAPIView(APIView):
             return response
 
 
-class UserAPIView(APIView):
+class       UserAPIView(APIView):
     authentication_classes = [JWTAuthentication]
     def dispatch(self, request, *args, **kwargs):
         self.payload = {}
