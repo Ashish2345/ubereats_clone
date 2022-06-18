@@ -1,5 +1,4 @@
 
-from lib2to3.pytree import Base
 import yaml
 import os
 
@@ -24,11 +23,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',
-
+    'corsheaders',  
     'rest_framework',
-
-    'accounts.apps.AccountsConfig'
+    'accounts.apps.AccountsConfig',
+    'testing_multiple'
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -50,7 +48,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, '../templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

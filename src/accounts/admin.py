@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import User, UserToken
+from .models import User, UserToken, Test
 
 class UserAdmin(admin.ModelAdmin):
     list_display = [ "id", "first_name", "last_name", "email", "contact_no", "dob", "is_superuser"]
@@ -14,3 +14,4 @@ class UserTokenAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.register(UserToken, UserTokenAdmin)
+admin.site.register(Test)
